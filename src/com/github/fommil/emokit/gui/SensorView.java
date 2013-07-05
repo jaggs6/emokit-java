@@ -1,0 +1,130 @@
+// Copyright Samuel Halliday 2012
+package com.github.fommil.emokit.gui;
+
+import com.github.fommil.emokit.EmotivListener;
+import com.github.fommil.emokit.Packet;
+import com.google.common.collect.MinMaxPriorityQueue;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import lombok.extern.java.Log;
+
+import javax.annotation.concurrent.GuardedBy;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+/**
+ * Gives visual feedback on the readings from the Emotiv sensors.
+ * <p/>
+ * This may take liberties in the conversion of the data in order to produce
+ * visually appealing results.
+ *
+ * @author Sam Halliday
+ */
+@Log
+public class SensorView extends JPanel implements EmotivListener {
+
+    private final Config config = ConfigFactory.load().getConfig("com.github.fommil.emokit.gui.sensors");
+    // TODO: offset per channel
+    private final int offset = 8464;
+    // a little bit of a break from the MVC model, we cache the last N entries here
+    // which requires a bit of safety because the receivePacket is in a different
+    // thread to the Swing thread.
+    @GuardedBy("lock")
+    public final ArrayList<Packet> recordQueue = new ArrayList<Packet>();
+    public final int MAX_SIZE = config.getInt("cache");
+    public final MinMaxPriorityQueue<Packet> liveQueue =
+            MinMaxPriorityQueue
+            .orderedBy(Ordering.natural().reverse())
+            .maximumSize(MAX_SIZE)
+            .create();
+    public ScrollableSensorView parent;
+    private Dimension temp;
+
+    public SensorView() {
+        setPreferredSize(new Dimension(-1, 250));
+        temp = new Dimension();
+    }
+    /*private final MinMaxPriorityQueue<Packet> scrollQueue =
+     MinMaxPriorityQueue
+     .orderedBy(Ordering.natural().reverse())
+     .maximumSize(config.getInt("cache"))
+     .create();*/
+    private final Lock lock = new ReentrantLock();
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        Set<Packet> packets = Sets.newTreeSet();
+        lock.lock();
+        try {
+            if(ScrollableSensorView.isRecording)
+            {
+                packets.addAll(recordQueue);
+            }
+            else
+            {
+                packets.addAll(liveQueue);
+            }
+        } finally {
+            lock.unlock();
+        }
+        Dimension size = getSize();
+
+        g.setColor(Color.WHITE);
+        g.fillRect(0, 0, size.width, size.height);
+
+        g.setColor(Color.BLACK);
+        Graphics2D g2 = (Graphics2D) g;
+        int i = 0;
+        for (Packet packet : packets) {
+            double x = i * size.getWidth() / packets.size();
+            for (Map.Entry<Packet.Sensor, Integer> entry : packet.getSensors().entrySet()) {
+                double y = 20 * (entry.getValue() - offset) / 2048.0;
+                Shape shape = new Rectangle.Double(x, y + 15 * entry.getKey().ordinal(), 2, 2);
+                g2.fill(shape);
+            }
+            i++;
+        }
+    }
+
+    @Override
+    public void receivePacket(Packet packet) {
+        lock.lock();
+        try {
+            if(ScrollableSensorView.isRecording)
+            {
+                recordQueue.add(packet);
+                temp.setSize((parent.getWidth()/MAX_SIZE)*recordQueue.size(), parent.getHeight());
+                this.setPreferredSize(temp);
+                revalidate();
+                liveQueue.clear();
+            }
+            else
+            {
+                temp.setSize(parent.getWidth(), parent.getHeight());
+                this.setPreferredSize(temp);
+                revalidate();
+                liveQueue.add(packet);
+                recordQueue.clear();
+            }
+        } finally {
+            lock.unlock();
+        }
+
+        repaint();
+    }
+    
+    
+
+    @Override
+    public void connectionBroken() {
+    }
+}

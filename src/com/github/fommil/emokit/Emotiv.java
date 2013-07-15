@@ -30,161 +30,162 @@ import java.util.logging.Level;
  * <p/>
  * The device is constantly polled in a background thread, filling up a buffer
  * (which could cause the application to OutOfMemory if not evacuated).
- * 
+ *
  * @author Sam Halliday
  */
 @Log
 @NotThreadSafe
 public final class Emotiv implements Closeable {
 
-	public static void main(String[] args) throws Exception {
-		Emotiv emotiv = new Emotiv();
+    public static void main(String[] args) throws Exception {
+        Emotiv emotiv = new Emotiv();
 
-		final EmotivSession session = new EmotivSession();
-		session.setName("My Session");
-		session.setNotes("My Notes for " + emotiv.getSerial());
+        final EmotivSession session = new EmotivSession();
+        session.setName("My Session");
+        session.setNotes("My Notes for " + emotiv.getSerial());
 
-		final Condition condition = new ReentrantLock().newCondition();
+        final Condition condition = new ReentrantLock().newCondition();
 
-		emotiv.addEmotivListener(new EmotivListener() {
-			@Override
-			public void receivePacket(Packet packet) {
-				EmotivDatum datum = EmotivDatum.fromPacket(packet);
-				datum.setSession(session);
-				Emotiv.log.info(datum.toString());
-			}
+        emotiv.addEmotivListener(new EmotivListener() {
+            @Override
+            public void receivePacket(Packet packet) {
+                EmotivDatum datum = EmotivDatum.fromPacket(packet);
+                datum.setSession(session);
+                Emotiv.log.info(datum.toString());
+            }
 
-			@Override
-			public void connectionBroken() {
-				//synchronized(condition)
-				//{
-					condition.signal();
-				//}
-			}
-		});
+            @Override
+            public void connectionBroken() {
+                //synchronized(condition)
+                //{
+                condition.signal();
+                //}
+            }
+        });
 
-		emotiv.start();
+        emotiv.start();
 
-		synchronized (condition) {
-			condition.wait();
-		}
-	}
+        synchronized (condition) {
+            condition.wait();
+        }
+    }
+    private EmotivHid raw;
+    private final AtomicBoolean accessed = new AtomicBoolean();
+    private final Cipher cipher;
+    private final EmotivParser parser = new EmotivParser();
+    @Getter
+    private final String serial;
+    private final Executor executor;
 
-	private final EmotivHid raw;
-	private final AtomicBoolean accessed = new AtomicBoolean();
-	private final Cipher cipher;
-	private final EmotivParser parser = new EmotivParser();
+    /**
+     * @throws IOException if there was a problem discovering the device.
+     */
+    public Emotiv() throws IOException {
+        try {
+            raw = new EmotivHid();
+        } catch (Exception e) {
+            raw = null;
+            e.printStackTrace();
+        }
+        try {
+            cipher = Cipher.getInstance("AES/ECB/NoPadding");
+            SecretKeySpec key = raw.getKey();
+            cipher.init(Cipher.DECRYPT_MODE, key);
+        } catch (Exception e) {
+            throw new IllegalStateException("no javax.crypto support");
+        }
+        serial = raw.getSerial();
 
-	@Getter
-	private final String serial;
+        Config config = ConfigFactory.load().getConfig("com.github.fommil.emokit");
+        int threads = config.getInt("threads");
+        executor = Executors.newFixedThreadPool(threads);
+    }
 
-	private final Executor executor;
+    /**
+     * Poll the device in a background thread and sends signals to registered
+     * listeners using a thread pool.
+     */
+    public void start() {
+        if (accessed.getAndSet(true)) {
+            throw new IllegalStateException("Cannot be called more than once.");
+        }
 
-	/**
-	 * @throws IOException
-	 *             if there was a problem discovering the device.
-	 */
-	public Emotiv() throws IOException {
-		raw = new EmotivHid();
-		try {
-			cipher = Cipher.getInstance("AES/ECB/NoPadding");
-			SecretKeySpec key = raw.getKey();
-			cipher.init(Cipher.DECRYPT_MODE, key);
-		} catch (Exception e) {
-			throw new IllegalStateException("no javax.crypto support");
-		}
-		serial = raw.getSerial();
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    poller();
+                } catch (Exception e) {
+                    Emotiv.log.log(Level.SEVERE, "Problem when polling", e);
+                    try {
+                        close();
+                    } catch (IOException ignored) {
+                    }
+                    fireConnectionBroken();
+                }
+            }
+        };
 
-		Config config = ConfigFactory.load().getConfig("com.github.fommil.emokit");
-		int threads = config.getInt("threads");
-		executor = Executors.newFixedThreadPool(threads);
-	}
+        Thread thread = new Thread(runnable, "Emotiv polling and decryption");
+        thread.setDaemon(true);
+        thread.start();
+    }
 
-	/**
-	 * Poll the device in a background thread and sends signals to registered
-	 * listeners using a thread pool.
-	 */
-	public void start() {
-		if (accessed.getAndSet(true))
-			throw new IllegalStateException("Cannot be called more than once.");
+    private void poller() throws TimeoutException, IOException,
+            BadPaddingException, IllegalBlockSizeException {
+        byte[] bytes = new byte[EmotivHid.BUFSIZE];
 
-		Runnable runnable = new Runnable() {
-			@Override
-			public void run() {
-				try {
-					poller();
-				} catch (Exception e) {
-					Emotiv.log.log(Level.SEVERE, "Problem when polling", e);
-					try {
-						close();
-					} catch (IOException ignored) {
-					}
-					fireConnectionBroken();
-				}
-			}
-		};
+        while (!raw.isClosed()) {
+            raw.poll(bytes);
 
-		Thread thread = new Thread(runnable, "Emotiv polling and decryption");
-		thread.setDaemon(true);
-		thread.start();
-	}
+            long timestamp = System.currentTimeMillis();
+            byte[] decrypted = cipher.doFinal(bytes);
 
-	private void poller() throws TimeoutException, IOException,
-			BadPaddingException, IllegalBlockSizeException {
-		byte[] bytes = new byte[EmotivHid.BUFSIZE];
+            Packet packet = parser.parse(timestamp, decrypted);
+            fireReceivePacket(packet);
+        }
+    }
 
-		while (!raw.isClosed()) {
-			raw.poll(bytes);
+    @Override
+    public void close() throws IOException {
+        raw.close();
+    }
 
-			long timestamp = System.currentTimeMillis();
-			byte[] decrypted = cipher.doFinal(bytes);
+    // https://github.com/peichhorn/lombok-pg/issues/139
+    protected void fireReceivePacket(final Packet arg0) {
+        for (final EmotivListener l : $registeredEmotivListener) {
+            Runnable runnable = new Runnable() {
+                @Override
+                public void run() {
+                    l.receivePacket(arg0);
+                }
+            };
+            executor.execute(runnable);
+        }
+    }
 
-			Packet packet = parser.parse(timestamp, decrypted);
-			fireReceivePacket(packet);
-		}
-	}
+    protected void fireConnectionBroken() {
+        for (final EmotivListener l : $registeredEmotivListener) {
+            Runnable runnable = new Runnable() {
+                @Override
+                public void run() {
+                    l.connectionBroken();
+                }
+            };
+            executor.execute(runnable);
+        }
+    }
+    // http://code.google.com/p/projectlombok/issues/detail?id=460
+    private final List<EmotivListener> $registeredEmotivListener = Lists
+            .newCopyOnWriteArrayList();
 
-	@Override
-	public void close() throws IOException {
-		raw.close();
-	}
+    public void addEmotivListener(final EmotivListener l) {
+        if (!$registeredEmotivListener.contains(l)) {
+            $registeredEmotivListener.add(l);
+        }
+    }
 
-	// https://github.com/peichhorn/lombok-pg/issues/139
-	protected void fireReceivePacket(final Packet arg0) {
-		for (final EmotivListener l : $registeredEmotivListener) {
-			Runnable runnable = new Runnable() {
-				@Override
-				public void run() {
-					l.receivePacket(arg0);
-				}
-			};
-			executor.execute(runnable);
-		}
-	}
-
-	protected void fireConnectionBroken() {
-		for (final EmotivListener l : $registeredEmotivListener) {
-			Runnable runnable = new Runnable() {
-				@Override
-				public void run() {
-					l.connectionBroken();
-				}
-			};
-			executor.execute(runnable);
-		}
-	}
-
-	// http://code.google.com/p/projectlombok/issues/detail?id=460
-	private final List<EmotivListener> $registeredEmotivListener = Lists
-			.newCopyOnWriteArrayList();
-
-	public void addEmotivListener(final EmotivListener l) {
-		if (!$registeredEmotivListener.contains(l))
-			$registeredEmotivListener.add(l);
-	}
-
-	public void removeEmotivListener(final EmotivListener l) {
-		$registeredEmotivListener.remove(l);
-	}
-
+    public void removeEmotivListener(final EmotivListener l) {
+        $registeredEmotivListener.remove(l);
+    }
 }

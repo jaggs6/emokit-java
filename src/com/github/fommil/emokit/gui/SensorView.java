@@ -48,6 +48,7 @@ public class SensorView extends JPanel implements EmotivListener {
             .create();
     public ScrollableSensorView parent;
     private Dimension temp;
+    public int parentHeight;
 
     public SensorView() {
         setPreferredSize(new Dimension(-1, 250));
@@ -102,14 +103,14 @@ public class SensorView extends JPanel implements EmotivListener {
             if(ScrollableSensorView.isRecording)
             {
                 recordQueue.add(packet);
-                temp.setSize((parent.getWidth()/MAX_SIZE)*recordQueue.size(), parent.getHeight());
+                temp.setSize((parent.getWidth()/MAX_SIZE)*recordQueue.size(), 225);
                 this.setPreferredSize(temp);
                 revalidate();
                 liveQueue.clear();
             }
             else
             {
-                temp.setSize(parent.getWidth(), parent.getHeight());
+                temp.setSize(parent.getWidth(), 225);
                 this.setPreferredSize(temp);
                 revalidate();
                 liveQueue.add(packet);

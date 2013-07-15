@@ -80,7 +80,7 @@ public class EmotivParser {
         // the counter is used to mixin battery and quality levels
         byte counter = decrypted[0];
         if (counter != lastCounter + 1 && lastCounter != 127)
-            log.config("missed a packet");
+            //log.config("missed a packet");
 
         if (counter < 0) {
             lastCounter = -1;
@@ -142,6 +142,10 @@ public class EmotivParser {
             default:
                 return null;
         }
+    }
+
+    private Object getLastCounter() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
 }

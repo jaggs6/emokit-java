@@ -23,7 +23,7 @@ import javax.swing.event.ChangeListener;
  * @author Sam Halliday
  */
 @Log
-public class SessionEditor extends JPanel {
+public class SessionEditor1 extends JPanel {
 
     @Getter
     @Setter
@@ -36,7 +36,7 @@ public class SessionEditor extends JPanel {
     private final JToggleButton live;
     private JList recordedSessions;
 
-    public SessionEditor() {
+    public SessionEditor1() {
         super(new BorderLayout());
 
         topPanel = new JPanel(new BorderLayout());

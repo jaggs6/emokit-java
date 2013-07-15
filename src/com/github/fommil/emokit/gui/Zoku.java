@@ -37,7 +37,8 @@ public class Zoku {
         //frame.setSize(1200, 800);
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         frame.setVisible(true);
-        frame.setResizable(false);
+        //frame.setResizable(false);
+        
         JPanel sidebar = new JPanel(new BorderLayout());
         sidebar.setBackground(Color.WHITE);
         frame.add(sidebar, BorderLayout.EAST);
@@ -45,14 +46,19 @@ public class Zoku {
         SensorQualityView quality = new SensorQualityView();
         frame.add(quality, BorderLayout.CENTER);
 
+        //sidebar.setPreferredSize(new Dimension(350,800));
+        frame.repaint();
+        
         BatteryView battery = new BatteryView();
         sidebar.add(battery, BorderLayout.NORTH);
 
-        GyroView gyro = new GyroView();
-        sidebar.add(gyro, BorderLayout.SOUTH);
+        
+        //GyroView gyro = new GyroView();
+        //sidebar.add(gyro, BorderLayout.SOUTH);
 
-        SessionEditor editor = new SessionEditor();
+        ControlsView editor = new ControlsView();
         editor.setController(database);
+        editor.loadSessionList();
         sidebar.add(editor, BorderLayout.CENTER);
 
         SensorView sv = new SensorView();
@@ -70,11 +76,13 @@ public class Zoku {
             emotiv.addEmotivListener(database);
             emotiv.addEmotivListener(quality);
             emotiv.addEmotivListener(battery);
-            emotiv.addEmotivListener(gyro);
+            //emotiv.addEmotivListener(gyro);
             emotiv.addEmotivListener(sensors.getSensorView());
             emotiv.start();
+            
+            editor.loadSessionList();
         } catch (IOException e) {
-            // log.log(Level.SEVERE, "", e);
+            //log(Level.SEVERE, "", e);
             System.exit(1);
         }
 //        }

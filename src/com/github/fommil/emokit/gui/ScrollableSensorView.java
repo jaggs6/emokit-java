@@ -38,6 +38,8 @@ public class ScrollableSensorView extends JScrollPane
                 e.getAdjustable().setValue(e.getAdjustable().getMaximum());  
         }
     });
+        
+        senView.parentHeight = this.getHeight();
 //        horizontalBar.addAdjustmentListener(new AdjustmentListener() {
 //
 //            @Override

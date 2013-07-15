@@ -5,6 +5,8 @@ package com.github.fommil.emokit.jpa;
 import com.github.fommil.emokit.EmotivListener;
 import com.github.fommil.emokit.Packet;
 import com.google.common.base.Preconditions;
+import com.github.fommil.emokit.jpa.EmotivSession;
+import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.java.Log;
@@ -41,6 +43,11 @@ public class EmotivJpaController implements EmotivListener {
         datumCrud = new EmotivDatumCrud(emf);
         sessionCrud = new EmotivSessionCrud(emf);
     }
+    
+    public List<EmotivSession> getSessions()
+    {
+        return sessionCrud.readAll();
+    }
 
     public void createSession(EmotivSession session) {
         this.session = session;
@@ -50,6 +57,13 @@ public class EmotivJpaController implements EmotivListener {
     public void updateSession(EmotivSession session) {
         Preconditions.checkNotNull(session);
         sessionCrud.update(session);
+    }
+    
+    public void deleteSession(EmotivSession session) {
+        Preconditions.checkNotNull(session);
+        
+        datumCrud.delete(datumCrud.getDatum(session));
+        sessionCrud.delete(session);
     }
 
     @Override

@@ -28,43 +28,88 @@ public class EmotivDatum {
         // Verbosity alert! Gotta love Java...
         EmotivDatum datum = new EmotivDatum();
 
-        datum.setTimestamp(packet.getDate());
-        datum.setBattery(packet.getBatteryLevel());
-        datum.setGyroX(packet.getGyroX());
-        datum.setGyroY(packet.getGyroY());
+        datum.timestamp = packet.getDate();
+        datum.battery = packet.getBatteryLevel();
+        datum.gyroX = packet.getGyroX();
+        datum.gyroY = packet.getGyroY();
 
-        datum.setF3(packet.getSensor(Sensor.F3));
-        datum.setF3_QUALITY(packet.getQuality(Sensor.F3));
-        datum.setFC5(packet.getSensor(Sensor.FC5));
-        datum.setFC5_QUALITY(packet.getQuality(Sensor.FC5));
-        datum.setAF3(packet.getSensor(Sensor.AF3));
-        datum.setAF3_QUALITY(packet.getQuality(Sensor.AF3));
-        datum.setF7(packet.getSensor(Sensor.F7));
-        datum.setF7_QUALITY(packet.getQuality(Sensor.F7));
-        datum.setT7(packet.getSensor(Sensor.T7));
-        datum.setT7_QUALITY(packet.getQuality(Sensor.T7));
-        datum.setP7(packet.getSensor(Sensor.P7));
-        datum.setP7_QUALITY(packet.getQuality(Sensor.P7));
-        datum.setO1(packet.getSensor(Sensor.O1));
-        datum.setO1_QUALITY(packet.getQuality(Sensor.O1));
-        datum.setO2(packet.getSensor(Sensor.O2));
-        datum.setO2_QUALITY(packet.getQuality(Sensor.O2));
-        datum.setP8(packet.getSensor(Sensor.P8));
-        datum.setP8_QUALITY(packet.getQuality(Sensor.P8));
-        datum.setT8(packet.getSensor(Sensor.T8));
-        datum.setT8_QUALITY(packet.getQuality(Sensor.T8));
-        datum.setF8(packet.getSensor(Sensor.F8));
-        datum.setF8_QUALITY(packet.getQuality(Sensor.F8));
-        datum.setAF4(packet.getSensor(Sensor.AF4));
-        datum.setAF4_QUALITY(packet.getQuality(Sensor.AF4));
-        datum.setFC6(packet.getSensor(Sensor.FC6));
-        datum.setFC6_QUALITY(packet.getQuality(Sensor.FC6));
-        datum.setF4(packet.getSensor(Sensor.F4));
-        datum.setF4_QUALITY(packet.getQuality(Sensor.F4));
+        datum.F3 = packet.getSensor(Sensor.F3);
+        datum.F3_QUALITY = packet.getQuality(Sensor.F3);
+        datum.FC5 = packet.getSensor(Sensor.FC5);
+        datum.FC5_QUALITY = packet.getQuality(Sensor.FC5);
+        datum.AF3 = packet.getSensor(Sensor.AF3);
+        datum.AF3_QUALITY = packet.getQuality(Sensor.AF3);
+        datum.F7 = packet.getSensor(Sensor.F7);
+        datum.F7_QUALITY = packet.getQuality(Sensor.F7);
+        datum.T7 = packet.getSensor(Sensor.T7);
+        datum.T7_QUALITY = packet.getQuality(Sensor.T7);
+        datum.P7 = packet.getSensor(Sensor.P7);
+        datum.P7_QUALITY = packet.getQuality(Sensor.P7);
+        datum.O1 = packet.getSensor(Sensor.O1);
+        datum.O1_QUALITY = packet.getQuality(Sensor.O1);
+        datum.O2 = packet.getSensor(Sensor.O2);
+        datum.O2_QUALITY = packet.getQuality(Sensor.O2);
+        datum.P8 = packet.getSensor(Sensor.P8);
+        datum.P8_QUALITY = packet.getQuality(Sensor.P8);
+        datum.T8 = packet.getSensor(Sensor.T8);
+        datum.T8_QUALITY = packet.getQuality(Sensor.T8);
+        datum.F8 = packet.getSensor(Sensor.F8);
+        datum.F8_QUALITY = packet.getQuality(Sensor.F8);
+        datum.AF4 = packet.getSensor(Sensor.AF4);
+        datum.AF4_QUALITY = packet.getQuality(Sensor.AF4);
+        datum.FC6 = packet.getSensor(Sensor.FC6);
+        datum.FC6_QUALITY = packet.getQuality(Sensor.FC6);
+        datum.F4 = packet.getSensor(Sensor.F4);
+        datum.F4_QUALITY = packet.getQuality(Sensor.F4);
+        
+        return datum;
+    }
+    
+    /**
+     * @param none
+     * @return packet.
+     
+    public static EmotivDatum toPacket() {
+        // Verbosity alert! Gotta love Java...
+        //Packet p = new Packet(timestamp, battery, decrypted, null)
+        
+        datum.timestamp = packet.getDate();
+        datum.battery = packet.getBatteryLevel();
+        datum.gyroX = packet.getGyroX();
+        datum.gyroY = packet.getGyroY();
+        
+        datum.F3 = packet.getSensor(Sensor.F3);
+        datum.F3_QUALITY = packet.getQuality(Sensor.F3);
+        datum.FC5 = packet.getSensor(Sensor.FC5);
+        datum.FC5_QUALITY = packet.getQuality(Sensor.FC5);
+        datum.AF3 = packet.getSensor(Sensor.AF3);
+        datum.AF3_QUALITY = packet.getQuality(Sensor.AF3);
+        datum.F7 = packet.getSensor(Sensor.F7);
+        datum.F7_QUALITY = packet.getQuality(Sensor.F7);
+        datum.T7 = packet.getSensor(Sensor.T7);
+        datum.T7_QUALITY = packet.getQuality(Sensor.T7);
+        datum.P7 = packet.getSensor(Sensor.P7);
+        datum.P7_QUALITY = packet.getQuality(Sensor.P7);
+        datum.O1 = packet.getSensor(Sensor.O1);
+        datum.O1_QUALITY = packet.getQuality(Sensor.O1);
+        datum.O2 = packet.getSensor(Sensor.O2);
+        datum.O2_QUALITY = packet.getQuality(Sensor.O2);
+        datum.P8 = packet.getSensor(Sensor.P8);
+        datum.P8_QUALITY = packet.getQuality(Sensor.P8);
+        datum.T8 = packet.getSensor(Sensor.T8);
+        datum.T8_QUALITY = packet.getQuality(Sensor.T8);
+        datum.F8 = packet.getSensor(Sensor.F8);
+        datum.F8_QUALITY = packet.getQuality(Sensor.F8);
+        datum.AF4 = packet.getSensor(Sensor.AF4);
+        datum.AF4_QUALITY = packet.getQuality(Sensor.AF4);
+        datum.FC6 = packet.getSensor(Sensor.FC6);
+        datum.FC6_QUALITY = packet.getQuality(Sensor.FC6);
+        datum.F4 = packet.getSensor(Sensor.F4);
+        datum.F4_QUALITY = packet.getQuality(Sensor.F4);
 
         return datum;
     }
-
+*/
 
     @Id
     private UUID id = UUID.randomUUID();

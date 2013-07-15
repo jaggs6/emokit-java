@@ -30,10 +30,14 @@ import java.util.Map;
 @EqualsAndHashCode
 public final class Packet implements Comparable<Packet> {
 
-    private final long timestamp;
-    private final int battery;
-    private final byte[] frame;
-    private final Map<Sensor, Integer> quality;
+    private long timestamp;
+    private int battery;
+    private byte[] frame;
+    private Map<Sensor, Integer> quality;
+
+    public Packet(long timestamp, int battery, byte[] decrypted, EnumMap<Sensor, Integer> newEnumMap) {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 
     public Date getDate() {
         return new Date(timestamp);

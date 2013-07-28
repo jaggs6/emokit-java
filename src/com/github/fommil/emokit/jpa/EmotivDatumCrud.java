@@ -22,7 +22,7 @@ public class EmotivDatumCrud extends CrudDao<UUID, EmotivDatum> {
      * @param EmotivSession es
      * @return List<EmotivDatum>
      */
-    public List<EmotivDatum> getDatum(EmotivSession es)
+    public List<EmotivDatum> getDatums(EmotivSession es)
     {
         List<EmotivDatum> led = new ArrayList<EmotivDatum>();
         List<EmotivDatum> oled = this.readAll();

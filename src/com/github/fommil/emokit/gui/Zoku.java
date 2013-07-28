@@ -38,8 +38,12 @@ public class Zoku {
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         frame.setVisible(true);
         //frame.setResizable(false);
+
+        JPanel sidebar = new JPanel();
+        //sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.PAGE_AXIS));
         
-        JPanel sidebar = new JPanel(new BorderLayout());
+        
+        
         sidebar.setBackground(Color.WHITE);
         frame.add(sidebar, BorderLayout.EAST);
 
@@ -48,23 +52,33 @@ public class Zoku {
 
         //sidebar.setPreferredSize(new Dimension(350,800));
         frame.repaint();
-        
-        BatteryView battery = new BatteryView();
-        sidebar.add(battery, BorderLayout.NORTH);
 
-        
-        //GyroView gyro = new GyroView();
-        //sidebar.add(gyro, BorderLayout.SOUTH);
+        BatteryView battery = new BatteryView();
+        //sidebar.add(battery, c);
 
         ControlsView editor = new ControlsView();
         editor.setController(database);
         editor.loadSessionList();
-        sidebar.add(editor, BorderLayout.CENTER);
+        //sidebar.add(editor, c);
+
+        GyroView gyro = new GyroView();
+        //sidebar.add(gyro, c);
+        
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
+ 
+        Box box = Box.createVerticalBox();
+        box.add(battery);
+        box.add(editor);
+        box.add(gyro);
+ 
+        sidebar.add(panel, BorderLayout.CENTER);
+        sidebar.add(box, BorderLayout.PAGE_END);
 
         SensorView sv = new SensorView();
         ScrollableSensorView sensors = new ScrollableSensorView(sv);
         frame.add(sensors, BorderLayout.SOUTH);
-        
+
         //JPanel bottombar = new JPanel(new BorderLayout());
         //frame.add(bottombar, BorderLayout.SOUTH);
 
@@ -79,7 +93,7 @@ public class Zoku {
             //emotiv.addEmotivListener(gyro);
             emotiv.addEmotivListener(sensors.getSensorView());
             emotiv.start();
-            
+
             editor.loadSessionList();
         } catch (IOException e) {
             //log(Level.SEVERE, "", e);

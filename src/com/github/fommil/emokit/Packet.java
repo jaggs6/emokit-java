@@ -35,8 +35,12 @@ public final class Packet implements Comparable<Packet> {
     private byte[] frame;
     private Map<Sensor, Integer> quality;
 
-    public Packet(long timestamp, int battery, byte[] decrypted, EnumMap<Sensor, Integer> newEnumMap) {
+    Packet(long timestamp, int battery, byte[] decrypted, EnumMap<Sensor, Integer> newEnumMap) {
         //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        this.timestamp = timestamp;
+        this.battery = battery;
+        this.frame = decrypted;
+        this.quality = newEnumMap;
     }
 
     public Date getDate() {

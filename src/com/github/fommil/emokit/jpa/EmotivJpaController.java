@@ -62,8 +62,13 @@ public class EmotivJpaController implements EmotivListener {
     public void deleteSession(EmotivSession session) {
         Preconditions.checkNotNull(session);
         
-        datumCrud.delete(datumCrud.getDatum(session));
+        datumCrud.delete(getDatums(session));
         sessionCrud.delete(session);
+    }
+    
+    public List<EmotivDatum> getDatums(EmotivSession es)
+    {
+        return datumCrud.getDatums(es);
     }
 
     @Override
